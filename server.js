@@ -135,3 +135,33 @@ app.get('/*', function(req, res) {
 app.listen(PORT, () => {
   console.log(`Listening on port: ${PORT}`)}
 );
+
+app.get('/movies', getMovies);
+
+function getMovies(req, res){
+  return searchForMovies(req.query)
+    .then( movieData => {
+      res.send(movieData);
+    });
+}
+
+function Movies(flicks){
+  this.title = flicks.title;
+  this.overview = flicks.overview;
+  this.average_votes = flicks.vote_average;
+  this.total_votes = flicks.vote_count;
+  this.popularity = flicks.popularity;
+  this.image_url = `https://image.tmdb.org/t/p/w185/${flicks.poster_path}`;
+  this.released_on = flicks.release_date;
+}
+
+function searchForMovies(query){
+  const url = (`https://api.themoviedb.org/3/search/movie?api_key=${process.env.MOVIES_DB_API_KEY}&query=${query.data.city}`);
+  return superagent.get(url)
+    .then(movieData => {
+      let flicks = [];
+      movieData.body.results.map(movies => flicks.push(new Movies(movies)));
+      return flicks;
+    })
+    .catch(err => console.error(err));
+}
